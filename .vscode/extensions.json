@@ -1,0 +1,27 @@
+{
+    "recommendations": [
+      "formulahendry.auto-rename-tag",
+      "mikestead.dotenv",
+      "dsznajder.es7-react-js-snippets",
+      "pkief.material-icon-theme",
+      "tobiastimm.matter",
+      "ms-vscode-remote.remote-ssh",
+      "ms-vscode-remote.remote-wsl",
+      "dbaeumer.vscode-eslint",
+      "github.vscode-github-actions",
+      "chang196700.newline",
+      "syler.sass-indented",
+      "rangav.vscode-thunder-client",
+      "vitest.explorer",
+      "redhat.vscode-yaml",
+      "zxh404.vscode-proto3",
+      "gruntfuggly.todo-tree",
+      "prisma.prisma",
+      "skyran.js-jsx-snippets",
+      "ms-vscode.vscode-typescript-next",
+      "jackie-onai.i18next",
+      "guestline.react-i18next-translation-on-hover",
+      "plex.vscode-protolint"
+    ]
+  }
+  

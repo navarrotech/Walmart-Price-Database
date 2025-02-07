@@ -1,0 +1,63 @@
+{
+  "name": "walmart-price-database",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "license": "MIT",
+  "author": {
+    "name": "Alex Navarro",
+    "email": "alex@navarrotech.net"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "yarn": ">=1.22.0"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "prisma migrate deploy && tsx src/index.ts",
+    "typecheck": "tsc",
+    "test": "vitest run --dom --coverage",
+    "test:dev": "cross-env DEBUG_PRINT_LIMIT=100000 vitest watch --ui --dom --coverage.enabled=false --reporter verbose",
+    "lint": "eslint . --ext ts,tsx --max-warnings 0",
+    "purge": "yarn clean && npx rimraf node_modules/",
+    "clean": "npx rimraf test/ && npx rimraf dist/",
+    "reinstall": "yarn purge && yarn install",
+    "preflight": "yarn && yarn test && yarn lint && yarn typecheck && yarn build && yarn clean && echo Preflight complete, all set to send!"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.3.1",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "prisma": "^6.3.1",
+    "yup": "^1.6.1"
+  },
+  "devDependencies": {
+    "@types/chalk": "^2.2.4",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.1",
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
+    "@vitest/coverage-v8": "2.1.9",
+    "chalk": "^5.4.1",
+    "cross-env": "^7.0.3",
+    "eslint": "^8.57.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-config-google": "^0.14.0",
+    "eslint-import-resolver-typescript": "^3.7.0",
+    "eslint-plugin-header": "^3.1.1",
+    "eslint-plugin-i18next": "^6.1.1",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "nodemon": "^3.1.9",
+    "rimraf": "^6.0.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.15.0",
+    "vitest": "^2.1.8"
+  }
+}

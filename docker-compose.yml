@@ -1,0 +1,41 @@
+
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    container_name: walmart-api
+    command: yarn dev
+    ports:
+      - 3000:3000
+    volumes:
+      - ./package.json:/app/package.json
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./yarn.lock:/app/yarn.lock
+      - ./prisma/:/app/prisma/
+      - ./src/:/app/src/
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@walmart-api-database:5432/${POSTGRES_DB}
+    depends_on:
+      - database
+    networks:
+      - walmart-api-network
+
+  database:
+    image: postgres:latest
+    container_name: walmart-api-database
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - 5432:5432
+    networks:
+      - walmart-api-network
+
+networks:
+  walmart-api-network:

@@ -1,0 +1,90 @@
+# Copyright © 2025 Algorivm
+
+name: Build & Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    container:
+      # A tad bit risky, but can payoff long term
+      # Alternative version tag: 23.4.0-bullseye-slim
+      image: node:latest
+
+    steps:
+      # Setup:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Restore cache
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-dependencies-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-dependencies-
+
+      # Install dependencies & make assets
+      - name: Install dependencies
+        id: install
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: yarn install
+
+      - name: Ensure linted
+        id: lint
+        run: yarn lint
+        continue-on-error: true
+
+      # Unit tests
+      - name: Run unit tests
+        id: test
+        run: yarn test
+        continue-on-error: true
+
+      # Typescript checking
+      - name: Check types
+        id: typescript
+        run: yarn tsc --noEmit
+        continue-on-error: true
+
+      - name: Check if any of the previous steps failed
+        run: |
+          # Initialize a failure flag
+          FAILURE=false
+
+          # Check the lint step
+          if [ "${{ steps.lint.outcome }}" != "success" ]; then
+            echo "Lint: FAILED"
+            FAILURE=true
+          else
+            echo "Lint: SUCCESS"
+          fi
+
+          # Check the test step
+          if [ "${{ steps.test.outcome }}" != "success" ]; then
+            echo "Test: FAILED"
+            FAILURE=true
+          else
+            echo "Test: SUCCESS"
+          fi
+
+          # Check the TypeScript step
+          if [ "${{ steps.typescript.outcome }}" != "success" ]; then
+            echo "TypeScript: FAILED"
+            FAILURE=true
+          else
+            echo "TypeScript: SUCCESS"
+          fi
+
+          # Exit with failure if any step failed
+          if [ "$FAILURE" = true ]; then
+            echo "One or more steps failed."
+            exit 1
+          fi
