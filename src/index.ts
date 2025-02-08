@@ -319,6 +319,13 @@ app.get('/reports', async (request, response) => {
   }
 })
 
+app.get('/ping', (_, response) => {
+  response.status(200).send({
+    code: 200,
+    message: 'Pong!'
+  } as ResponseShape)
+})
+
 // Catchall
 app.all('*', (_, response) => {
   response.sendStatus(204)
