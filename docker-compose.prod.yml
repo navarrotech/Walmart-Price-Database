@@ -2,19 +2,9 @@
 
 services:
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: navarrocity/walmart-inspector-api:latest
     restart: always
     container_name: walmart-inspector-api
-    ports:
-      - 3000:3000
-    volumes:
-      - ./package.json:/app/package.json
-      - ./tsconfig.json:/app/tsconfig.json
-      - ./yarn.lock:/app/yarn.lock
-      - ./prisma/:/app/prisma/
-      - ./src/:/app/src/
     environment:
       - NODE_ENV=${NODE_ENV}
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@walmart-inspector-database:5432/${POSTGRES_DB}
@@ -57,7 +47,7 @@ services:
       - ssl_data:/etc/resty-auto-ssl
     environment:
       ALLOWED_DOMAINS: 'navarrotech.net'
-      SITES: 'walmart.navarrotech.net=api:3000,walmart-admin.navarrotech.net=portainer:9000'
+      SITES: 'walmart.navarrotech.net=api:3000;walmart-admin.navarrotech.net=portainer:9000'
     networks:
       - walmart-inspector-network
       - default

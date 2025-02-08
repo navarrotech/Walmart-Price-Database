@@ -42,6 +42,8 @@ const validationOptions: yup.ValidateOptions = {
 //        Middleware        //
 // //////////////////////// //
 
+app.set('trust proxy', true)
+
 app.use(
   // CORS
   cors({
