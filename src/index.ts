@@ -16,14 +16,12 @@ import rateLimit from 'express-rate-limit'
 
 // Utility
 import { createHash } from 'crypto'
-import { log, logAttributes, logDebug, logSuccess, logToDiscord } from './logging'
+import { log, logAttributes, logDebug, logError, logSuccess, logToDiscord } from './logging'
 import { yup } from './validators'
 
 // Misc
 import { NODE_ENV, VERSION, PORT } from './env'
 import { handleErrorResponse } from './response'
-
-import './criticalReporting'
 
 // //////////////////////// //
 //           Core           //
@@ -344,6 +342,30 @@ app.all('*', (_, response) => {
 // setInterval(() => {
 //   log('Cleaning up old data')
 // }, 60_000)
+
+// //////////////////////// //
+//          Process         //
+// //////////////////////// //
+
+// Graceful shutdown
+async function graceful() {
+  log('API Shutdown Initiated')
+  await prisma.$disconnect()
+  log('API Shutdown Complete')
+  process.exit(0)
+}
+
+process.on('SIGINT', graceful)
+process.on('SIGTERM', graceful)
+process.on('SIGUSR2', graceful)
+
+process.on(
+  'uncaughtException',
+  async function onUncaughtException(error) {
+    await logError('Uncaught exception:', error)
+    await graceful()
+  }
+)
 
 // //////////////////////// //
 //           Init           //

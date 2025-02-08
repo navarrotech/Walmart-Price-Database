@@ -62,7 +62,7 @@ export function logWarn(...messages: any[]): void {
   )
 }
 
-export function logError(...messages: any[]): void {
+export async function logError(...messages: any[]): Promise<void> {
   console.error(
     ...messages.map((message) => {
       if (typeof message === 'string') {
@@ -72,7 +72,7 @@ export function logError(...messages: any[]): void {
     })
   )
 
-  logToDiscord(...messages)
+  await logToDiscord(...messages)
 }
 
 export async function logToDiscord(...messages: any[]) {
