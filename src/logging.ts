@@ -4,6 +4,7 @@
 import chalk from 'chalk'
 
 // Misc
+import { REPORTING_DISCORD_WEBHOOK } from './constants'
 import { NODE_ENV } from './env'
 
 export function logAttributes(attributes: Record<string, any>): void {
@@ -70,4 +71,34 @@ export function logError(...messages: any[]): void {
       return message
     })
   )
+
+  logToDiscord(...messages)
+}
+
+export async function logToDiscord(...messages: any[]) {
+  await fetch(REPORTING_DISCORD_WEBHOOK, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'Application/JSON',
+    },
+    body: JSON.stringify({
+      content: messages
+        .map((message) => {
+          if (typeof message === 'string') {
+            return message
+          }
+          if (message instanceof Error) {
+            return message?.stack
+                  ? `\`\`\`${message.stack}\`\`\``
+                  : (message.name + ': ' + message.message
+                )
+          }
+          if (typeof message === 'object') {
+            return `\`\`\`${JSON.stringify(message, null, 2)}\`\`\``
+          }
+          return message
+        })
+        .join('\n'),
+    }),
+  })
 }

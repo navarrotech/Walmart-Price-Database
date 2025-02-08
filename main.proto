@@ -1,0 +1,35 @@
+// Copyright © 2025 Navarrotech
+
+syntax = "proto3";
+
+message ItemReport {
+  string item_id = 1;
+  string store_id = 2;
+  int32 price = 3;
+  optional string item_name = 4;
+  optional string created = 5;
+}
+
+message Reports {
+  repeated ItemReport reports = 1;
+  int32 version = 2;
+}
+
+message ApiResponse {
+  int32 code = 1;
+  string message = 2;
+  optional string data = 3;
+  repeated string errors = 4;
+}
+
+message Query {
+  string storeId = 1;
+  repeated string itemId = 2;
+  optional int32 page = 3;
+}
+
+message QueryResponse {
+  int32 code = 1;
+  string message = 2;
+  optional ItemReport data = 3;
+}

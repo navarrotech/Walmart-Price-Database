@@ -16,11 +16,14 @@ import rateLimit from 'express-rate-limit'
 
 // Utility
 import { createHash } from 'crypto'
-import { log, logAttributes, logDebug, logError, logSuccess } from './logging'
+import { log, logAttributes, logDebug, logSuccess, logToDiscord } from './logging'
 import { yup } from './validators'
 
 // Misc
 import { NODE_ENV, VERSION, PORT } from './env'
+import { handleErrorResponse } from './response'
+
+import './criticalReporting'
 
 // //////////////////////// //
 //           Core           //
@@ -47,8 +50,8 @@ app.use(
   }),
   // Rate limiting
   rateLimit({
-    max: 9,
-    windowMs: 15_000,
+    max: 12,
+    windowMs: 20_000,
     standardHeaders: true
   }),
   helmet(),
@@ -94,7 +97,7 @@ const reportSchema = yup.object().shape({
   storeId: storeIdSchema.clone(),
   itemName: yup
     .string()
-    .replace(/[^a-zA-Z0-9]/g)
+    .replace(/[^a-zA-Z0-9\s]/g)
     .maxTrim(96)
     .trim()
     .optional(),
@@ -124,7 +127,7 @@ const getReportsQuery = yup.object().shape({
     .optional()
     .default(0)
     .min(0)
-    .max(100),
+    .max(150),
 })
 
 // //////////////////////// //
@@ -142,8 +145,18 @@ app.post('/reports', async (request, response) => {
     )
 
     const { reports, version } = data
+    const ip: string = request.headers['x-forwarded-for']
+      ? (request.headers['x-forwarded-for'] as string).split(',')[0]
+      : request.socket.remoteAddress  || request.ip
 
-    logDebug('Received report:', data)
+    logDebug(`Received report from ${ip}:`, {
+      version,
+      reports: [ `${reports.length} items` ]
+    })
+
+    const reporter = createHash('sha256')
+      .update(ip)
+      .digest('hex')
 
     // Remapping by version:
     let remappedReports: ItemPriceReport[] = []
@@ -159,10 +172,8 @@ app.post('/reports', async (request, response) => {
         skuid: report.itemId,
         storeid: report.storeId,
 
-        // hashed Ip address of the reporter:
-        reporter: createHash('sha256')
-          .update(request.ip)
-          .digest('hex'),
+        // Hashed IP address of the reporter:
+        reporter,
       } as ItemPriceReport))
     }
     else {
@@ -177,11 +188,20 @@ app.post('/reports', async (request, response) => {
     // We go through each report, and if the price hasn't changed we don't add the new report
     const promises = []
     for (const report of remappedReports) {
+      if (report.price < 0) {
+        logDebug('Skipping (< $0) report:', report)
+        continue
+      }
+
       promises.push(new Promise(async (accept) => {
         const lastReport = await prisma.itemPriceReport.findFirst({
           where: {
             storeid: report.storeid,
             skuid: report.skuid,
+            // Created within the last 8 hours:
+            created: {
+              gte: new Date(Date.now() - 8 * 60 * 60 * 1000),
+            }
           },
           orderBy: {
             created: 'desc',
@@ -198,42 +218,32 @@ app.post('/reports', async (request, response) => {
       }))
     }
 
-    response.status(200).send({
-      code: 200,
-      message: 'OK',
-    } as ResponseShape)
+    await Promise.allSettled(promises)
+
+    response
+      .status(200)
+      .send({
+        code: 200,
+        message: 'OK',
+      } as ResponseShape)
+
+    // New user success reporting
+    const existingUserEntry = await prisma.user.findFirst({
+      where: {
+        reporter,
+      },
+    })
+
+    if (!existingUserEntry) {
+      await logToDiscord(`New user joined and reported ${remappedReports.length} items! (Neat)`) 
+    }
   }
   catch (error: unknown) {
-    if (error instanceof yup.ValidationError) {
-      response.status(400).send({
-        code: 400,
-        message: 'Bad request: Invalid data received in body payload',
-        data: error.errors,
-      } as ResponseShape)
-      return
-    }
-    // else if (error instanceof PrismaClientKnownRequestError) {
-      // PrismaClientKnownRequestError
-      // PrismaClientUnknownRequestError
-      // PrismaClientRustPanicError
-      // PrismaClientInitializationError
-      // PrismaClientValidationError
-    // }
-    else if (error instanceof Error) {
-      response.status(500).send({
-        code: 500,
-        message: error.message,
-      } as ResponseShape)
-      logError('Error in /report:', error.message)
-      logDebug(error.stack)
-    }
-    else {
-      response.status(500).send({
-        code: 500,
-        message: 'Internal server error',
-      } as ResponseShape)
-      logError('Error in /report:', error)
-    }
+    return handleErrorResponse(
+      request,
+      response,
+      error
+    )
   }
 })
 
@@ -280,29 +290,11 @@ app.get('/reports', async (request, response) => {
     } as ResponseShape<ItemPriceReport[]>)
   }
   catch (error: unknown) {
-    if (error instanceof yup.ValidationError) {
-      response.status(400).send({
-        code: 400,
-        message: 'Bad request: Invalid query parameters',
-        data: error.errors,
-      } as ResponseShape)
-      return
-    }
-    else if (error instanceof Error) {
-      response.status(500).send({
-        code: 500,
-        message: error.message,
-      } as ResponseShape)
-      logError('Error in /reports:', error.message)
-      logDebug(error.stack)
-    }
-    else {
-      response.status(500).send({
-        code: 500,
-        message: 'Internal server error',
-      } as ResponseShape)
-      logError('Error in /reports:', error)
-    }
+    return handleErrorResponse(
+      request,
+      response,
+      error
+    )
   }
 })
 

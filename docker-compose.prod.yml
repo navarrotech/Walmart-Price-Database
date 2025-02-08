@@ -7,7 +7,6 @@ services:
       dockerfile: Dockerfile
     restart: always
     container_name: walmart-api
-    command: yarn dev
     ports:
       - 3000:3000
     volumes:
@@ -32,13 +31,40 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - 5432:5432
     networks:
       - walmart-api-network
 
+  # Portainer CE
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: walmart-api-portainer
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - default
+
+  # Nginx
+  nginx:
+    image: valian/docker-nginx-auto-ssl:latest
+    container_name: walmart-api-nginx
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ssl_data:/etc/resty-auto-ssl
+    environment:
+      ALLOWED_DOMAINS: 'navarrotech.net'
+      SITES: 'walmart.navarrotech.net=api:3000,walmart-admin.navarrotech.net=portainer:9000'
+    networks:
+      - walmart-api-network
+      - default
+
 volumes:
-  ssl-data:
+  ssl_data:
+  portainer_data:
 
 networks:
   walmart-api-network:
