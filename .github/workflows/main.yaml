@@ -108,7 +108,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
         with:
-          context: api
+          context: .
           push: true
           tags: |
             ${{ vars.DOCKERHUB_USERNAME }}/walmart-inspector-api:latest
