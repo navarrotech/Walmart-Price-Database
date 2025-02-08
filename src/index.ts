@@ -185,6 +185,13 @@ app.post('/reports', async (request, response) => {
     //   data: remappedReports,
     // })
 
+    // New user success reporting
+    const existingUserEntry = await prisma.itemPriceReport.findFirst({
+      where: {
+        reporter,
+      },
+    })
+
     // We go through each report, and if the price hasn't changed we don't add the new report
     const promises = []
     for (const report of remappedReports) {
@@ -227,15 +234,24 @@ app.post('/reports', async (request, response) => {
         message: 'OK',
       } as ResponseShape)
 
-    // New user success reporting
-    const existingUserEntry = await prisma.user.findFirst({
-      where: {
-        reporter,
-      },
-    })
-
     if (!existingUserEntry) {
-      await logToDiscord(`New user joined and reported ${remappedReports.length} items! (Neat)`) 
+      try {
+        const ipLocation = await fetch(`http://ip-api.com/json/${ip}`)
+        if (!ipLocation.ok) {
+          throw new Error('Failed to fetch IP location')
+        }
+        const asJson = await ipLocation.json()
+        await logToDiscord(
+          `New user joined and reported ${remappedReports.length} items! (Neat)\n`,
+          `IP: ${ip}\n`,
+          `Location: ${asJson.city}, ${asJson.regionName}, ${asJson.country}`,
+        )
+      }
+      catch {
+        await logToDiscord(
+          `New user joined and reported ${remappedReports.length} items! (Neat)`
+        )
+      }
     }
   }
   catch (error: unknown) {
