@@ -10,7 +10,7 @@ import { NODE_ENV } from './env'
 export function logAttributes(attributes: Record<string, any>): void {
   // The key would be blueBright, the value would be green.
   // Format: "key: value"
-  Object.entries(attributes).forEach(([key, value]) => {
+  Object.entries(attributes).forEach(([ key, value ]) => {
     console.log(`  > ${chalk.white(key)}: ${chalk.blueBright(value)}`)
   })
 }
@@ -26,7 +26,7 @@ export function logSuccess(...messages: any[]): void {
   )
 }
 
-export function logDebug(...messages: any[]): void { 
+export function logDebug(...messages: any[]): void {
   if (NODE_ENV !== 'development') {
     return
   }
@@ -79,7 +79,7 @@ export async function logToDiscord(...messages: any[]) {
   await fetch(REPORTING_DISCORD_WEBHOOK, {
     method: 'POST',
     headers: {
-      'Content-Type': 'Application/JSON',
+      'Content-Type': 'Application/JSON'
     },
     body: JSON.stringify({
       content: messages
@@ -89,16 +89,16 @@ export async function logToDiscord(...messages: any[]) {
           }
           if (message instanceof Error) {
             return message?.stack
-                  ? `\`\`\`${message.stack}\`\`\``
-                  : (message.name + ': ' + message.message
-                )
+              ? `\`\`\`${message.stack}\`\`\``
+              : (message.name + ': ' + message.message
+              )
           }
           if (typeof message === 'object') {
             return `\`\`\`${JSON.stringify(message, null, 2)}\`\`\``
           }
           return message
         })
-        .join('\n'),
-    }),
+        .join('\n')
+    })
   })
 }

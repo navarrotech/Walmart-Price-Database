@@ -39,7 +39,7 @@ export default defineConfig({
 
     // React.js:
     globals: true,
-    environment: 'happy-dom',
+    environment: 'node',
 
     // Circle CI:
     minWorkers: 2,

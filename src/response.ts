@@ -28,9 +28,8 @@ export function handleErrorResponse(_: Request, response: Response, error: unkno
     response.status(400).send({
       code: 400,
       message: 'Bad request: Invalid data received in body payload',
-      data: error.errors,
+      data: error.errors
     } as ResponseShape)
-    return
   }
   else if (
     error instanceof PrismaClientKnownRequestError
@@ -41,7 +40,7 @@ export function handleErrorResponse(_: Request, response: Response, error: unkno
   ) {
     response.status(400).send({
       code: 400,
-      message: error.message,
+      message: error.message
     } as ResponseShape)
     logError('Error in report:', error.message)
     logDebug(error)
@@ -49,7 +48,7 @@ export function handleErrorResponse(_: Request, response: Response, error: unkno
   else if (error instanceof Error) {
     response.status(500).send({
       code: 500,
-      message: error.message,
+      message: error.message
     } as ResponseShape)
     logError('Error in report:', error.message)
     logDebug(error.stack)
@@ -57,7 +56,7 @@ export function handleErrorResponse(_: Request, response: Response, error: unkno
   else {
     response.status(500).send({
       code: 500,
-      message: 'Internal server error',
+      message: 'Internal server error'
     } as ResponseShape)
     logError('Error in report:', error)
   }

@@ -35,7 +35,7 @@ const validationOptions: yup.ValidateOptions = {
   abortEarly: false,
   disableStackTrace: true,
   stripUnknown: true,
-  recursive: true,
+  recursive: true
 }
 
 // //////////////////////// //
@@ -46,7 +46,7 @@ app.use(
   // CORS
   cors({
     origin: true,
-    credentials: true,
+    credentials: true
   }),
   // Rate limiting
   rateLimit({
@@ -57,7 +57,7 @@ app.use(
   helmet(),
   // Parse incoming POST request bodys
   express.json({
-    limit: '100mb',
+    limit: '100mb'
   }),
   // @ts-ignore If they've sent an invalid JSON in the body of a POST request, let's catch it here!
   function catchJsonError(err: Error, req: Request, res: Response, next: NextFunction) {
@@ -65,13 +65,13 @@ app.use(
     if (err instanceof SyntaxError && err?.status === 400 && 'body' in err) {
       res.status(406).send({
         code: 406,
-        message: 'Bad request: Invalid JSON received in body payload',
+        message: 'Bad request: Invalid JSON received in body payload'
       } as ResponseShape)
-      return
-    } else {
+    }
+    else {
       next()
     }
-  },
+  }
 )
 
 // //////////////////////// //
@@ -105,16 +105,16 @@ const reportSchema = yup.object().shape({
     .number()
     .minTrim(-1)
     .maxTrim(100_000)
-    .required(),
+    .required()
 })
 
 const reportRequestBody = yup.object().shape({
   reports: yup.array().of(reportSchema).max(100).required(),
   version: yup
     .number()
-    .min(1, "Unsupported version")
-    .max(1, "Unsupported version")
-    .default(1),
+    .min(1, 'Unsupported version')
+    .max(1, 'Unsupported version')
+    .default(1)
 })
 
 const getReportsQuery = yup.object().shape({
@@ -127,7 +127,7 @@ const getReportsQuery = yup.object().shape({
     .optional()
     .default(0)
     .min(0)
-    .max(150),
+    .max(150)
 })
 
 // //////////////////////// //
@@ -140,14 +140,14 @@ app.post('/reports', async (request, response) => {
   try {
     // Validation:
     const data = await reportRequestBody.validate(
-      body, 
+      body,
       validationOptions
     )
 
     const { reports, version } = data
     const ip: string = request.headers['x-forwarded-for']
       ? (request.headers['x-forwarded-for'] as string).split(',')[0]
-      : request.socket.remoteAddress  || request.ip
+      : request.socket.remoteAddress || request.ip
 
     logDebug(`Received report from ${ip}:`, {
       version,
@@ -173,13 +173,13 @@ app.post('/reports', async (request, response) => {
         storeid: report.storeId,
 
         // Hashed IP address of the reporter:
-        reporter,
+        reporter
       } as ItemPriceReport))
     }
     else {
       throw new Error('Unsupported version')
     }
-    
+
     // Instead of blanket adding them:
     // await prisma.itemPriceReport.createMany({
     //   data: remappedReports,
@@ -188,8 +188,8 @@ app.post('/reports', async (request, response) => {
     // New user success reporting
     const existingUserEntry = await prisma.itemPriceReport.findFirst({
       where: {
-        reporter,
-      },
+        reporter
+      }
     })
 
     // We go through each report, and if the price hasn't changed we don't add the new report
@@ -200,29 +200,32 @@ app.post('/reports', async (request, response) => {
         continue
       }
 
-      promises.push(new Promise(async (accept) => {
-        const lastReport = await prisma.itemPriceReport.findFirst({
-          where: {
-            storeid: report.storeid,
-            skuid: report.skuid,
-            // Created within the last 8 hours:
-            created: {
-              gte: new Date(Date.now() - 8 * 60 * 60 * 1000),
+      promises.push(
+        // eslint-disable-next-line no-async-promise-executor
+        new Promise(async (accept) => {
+          const lastReport = await prisma.itemPriceReport.findFirst({
+            where: {
+              storeid: report.storeid,
+              skuid: report.skuid,
+              // Created within the last 8 hours:
+              created: {
+                gte: new Date(Date.now() - 8 * 60 * 60 * 1000)
+              }
+            },
+            orderBy: {
+              created: 'desc'
             }
-          },
-          orderBy: {
-            created: 'desc',
-          },
-        })
-
-        if (lastReport?.price !== report.price) {
-          await prisma.itemPriceReport.create({
-            data: report,
           })
-        }
 
-        accept(null)
-      }))
+          if (lastReport?.price !== report.price) {
+            await prisma.itemPriceReport.create({
+              data: report
+            })
+          }
+
+          accept(null)
+        })
+      )
     }
 
     await Promise.allSettled(promises)
@@ -231,7 +234,7 @@ app.post('/reports', async (request, response) => {
       .status(200)
       .send({
         code: 200,
-        message: 'OK',
+        message: 'OK'
       } as ResponseShape)
 
     if (!existingUserEntry) {
@@ -244,7 +247,7 @@ app.post('/reports', async (request, response) => {
         await logToDiscord(
           `New user joined and reported ${remappedReports.length} items! (Neat)\n`,
           `IP: ${ip}\n`,
-          `Location: ${asJson.city}, ${asJson.regionName}, ${asJson.country}`,
+          `Location: ${asJson.city}, ${asJson.regionName}, ${asJson.country}`
         )
       }
       catch {
@@ -255,7 +258,7 @@ app.post('/reports', async (request, response) => {
     }
   }
   catch (error: unknown) {
-    return handleErrorResponse(
+    handleErrorResponse(
       request,
       response,
       error
@@ -283,17 +286,17 @@ app.get('/reports', async (request, response) => {
       where: {
         storeid: storeId,
         skuid: {
-          in: itemIds,
-        },
+          in: itemIds
+        }
       },
       // Sorting:
       orderBy: {
-        created: 'desc',
+        created: 'desc'
       },
       // Omitting fields:
       omit: {
         id: true,
-        reporter: true,
+        reporter: true
       }
     })
 
@@ -302,11 +305,11 @@ app.get('/reports', async (request, response) => {
     response.status(200).send({
       code: 200,
       message: 'OK',
-      data: reports,
+      data: reports
     } as ResponseShape<ItemPriceReport[]>)
   }
   catch (error: unknown) {
-    return handleErrorResponse(
+    handleErrorResponse(
       request,
       response,
       error
@@ -339,16 +342,16 @@ app.all('*', (_, response) => {
 
 // Startup
 Promise.all([
-  prisma.$connect(),
+  prisma.$connect()
 ])
-.then(() => {
-  app.listen(PORT, () => {
-    log('API Startup Complete')
-    logAttributes({
-      Port: PORT,
-      Version: VERSION,
-      Environment: NODE_ENV,
+  .then(() => {
+    app.listen(PORT, () => {
+      log('API Startup Complete')
+      logAttributes({
+        Port: PORT,
+        Version: VERSION,
+        Environment: NODE_ENV
+      })
+      logSuccess('Created by Navarrotech ' + new Date().getFullYear())
     })
-    logSuccess('Created by Navarrotech ' + new Date().getFullYear())
   })
-})

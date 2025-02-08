@@ -1,4 +1,4 @@
-# Copyright © 2025 Algorivm
+# Copyright © 2025 Navarrotech
 
 name: Build & Test
 
@@ -88,3 +88,26 @@ jobs:
             echo "One or more steps failed."
             exit 1
           fi
+
+      # If on main branch, build docker image for api & publish to docker.io
+      - name: Build Docker image
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+
+          # Attempt to pull the existing 'latest' image for caching; ignore error if it doesn't exist
+          docker pull ${{ secrets.DOCKER_USERNAME }}/walmart-inspector-api:latest || true
+
+          # Build the image from the 'api' directory with cache from the previous build
+          docker build --cache-from ${{ secrets.DOCKER_USERNAME }}/walmart-inspector-api:latest \
+            -t walmart-inspector-api \
+            -f api/Dockerfile \
+            api
+
+            # Tag the built image with 'latest' and with the current git commit hash
+          docker tag walmart-inspector-api ${{ secrets.DOCKER_USERNAME }}/walmart-inspector-api:latest
+          docker tag walmart-inspector-api ${{ secrets.DOCKER_USERNAME }}/walmart-inspector-api:${{ github.sha }}
+
+          # Push both tags to Docker Hub
+          docker push ${{ secrets.DOCKER_USERNAME }}/walmart-inspector-api:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/walmart-inspector-api:${{ github.sha }}

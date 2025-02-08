@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: always
-    container_name: walmart-api
+    container_name: walmart-inspector-api
     command: yarn dev
     ports:
       - 3000:3000
@@ -18,15 +18,15 @@ services:
       - ./src/:/app/src/
     environment:
       - NODE_ENV=${NODE_ENV}
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@walmart-api-database:5432/${POSTGRES_DB}
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@walmart-inspector-database:5432/${POSTGRES_DB}
     depends_on:
       - database
     networks:
-      - walmart-api-network
+      - walmart-inspector-network
 
   database:
     image: postgres:latest
-    container_name: walmart-api-database
+    container_name: walmart-inspector-database
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -35,10 +35,10 @@ services:
     ports:
       - 5432:5432
     networks:
-      - walmart-api-network
+      - walmart-inspector-network
 
 volumes:
   ssl-data:
 
 networks:
-  walmart-api-network:
+  walmart-inspector-network:

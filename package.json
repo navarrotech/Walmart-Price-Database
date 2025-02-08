@@ -15,16 +15,17 @@
     "dev": "tsx watch src/index.ts",
     "start": "prisma migrate deploy && tsx src/index.ts",
     "typecheck": "tsc",
-    "test": "vitest run --dom --coverage",
-    "test:dev": "cross-env DEBUG_PRINT_LIMIT=100000 vitest watch --ui --dom --coverage.enabled=false --reporter verbose",
+    "test": "vitest run --coverage",
+    "test:dev": "cross-env DEBUG_PRINT_LIMIT=100000 vitest watch --ui --coverage.enabled=false --reporter verbose",
     "lint": "eslint . --ext ts,tsx --max-warnings 0",
     "purge": "yarn clean && npx rimraf node_modules/",
     "clean": "npx rimraf test/ && npx rimraf dist/",
     "reinstall": "yarn purge && yarn install",
-    "preflight": "yarn && yarn test && yarn lint && yarn typecheck && yarn build && yarn clean && echo Preflight complete, all set to send!"
+    "preflight": "yarn && yarn test && yarn lint && yarn typecheck && yarn clean && echo Preflight complete, all set to send!"
   },
   "dependencies": {
     "@prisma/client": "^6.3.1",
+    "chalk": "^5.4.1",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
@@ -33,6 +34,7 @@
     "yup": "^1.6.1"
   },
   "devDependencies": {
+    "@stylistic/eslint-plugin-js": "^3.1.0",
     "@types/chalk": "^2.2.4",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
@@ -40,7 +42,7 @@
     "@typescript-eslint/eslint-plugin": "^8.18.0",
     "@typescript-eslint/parser": "^8.18.0",
     "@vitest/coverage-v8": "2.1.9",
-    "chalk": "^5.4.1",
+    "@vitest/ui": "2.1.9",
     "cross-env": "^7.0.3",
     "eslint": "^8.57.0",
     "eslint-config-airbnb": "^19.0.4",
