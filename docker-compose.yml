@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    restart: always
+    restart: unless-stopped
     container_name: walmart-inspector-api
     command: yarn dev
     ports:
@@ -27,7 +27,7 @@ services:
   database:
     image: postgres:latest
     container_name: walmart-inspector-database
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}

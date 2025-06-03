@@ -94,7 +94,7 @@ jobs:
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKER_PAT }}
-          registry: docker.io
+          registry: docker.jalapenolabs.io
 
       - name: Set up QEMU
         if: github.ref == 'refs/heads/main'
@@ -111,5 +111,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ vars.DOCKERHUB_USERNAME }}/walmart-inspector-api:latest
-            ${{ vars.DOCKERHUB_USERNAME }}/walmart-inspector-api:${{ github.sha }}
+            walmart-inspector-api:latest
+            walmart-inspector-api:${{ github.sha }}

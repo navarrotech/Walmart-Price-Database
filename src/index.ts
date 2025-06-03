@@ -17,11 +17,11 @@ import rateLimit from 'express-rate-limit'
 // Utility
 import { createHash } from 'crypto'
 import { log, logAttributes, logDebug, logError, logSuccess, logToDiscord } from './logging'
+import { handleErrorResponse } from './response'
 import { yup } from './validators'
 
 // Misc
 import { NODE_ENV, VERSION, PORT } from './env'
-import { handleErrorResponse } from './response'
 
 // //////////////////////// //
 //           Core           //
@@ -195,7 +195,12 @@ app.post('/reports', async (request, response) => {
     // We go through each report, and if the price hasn't changed we don't add the new report
     const promises = []
     for (const report of remappedReports) {
-      if (report.price < 0) {
+      if (
+        report.price < 0
+        || !report.storeid
+        || report.storeid === 'unknown'
+        || report.storeid === 'undefined'
+      ) {
         logDebug('Skipping (< $0) report:', report)
         continue
       }

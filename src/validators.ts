@@ -2,7 +2,6 @@
 
 /* eslint-disable no-invalid-this, @typescript-eslint/no-unused-vars */
 
-
 import * as yup from 'yup'
 
 // Extend yup's type definitions for our custom methods
